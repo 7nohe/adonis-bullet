@@ -1,0 +1,20 @@
+{{{
+  exports({ to: app.configPath('bullet.ts') })
+}}}
+
+import env from '#start/env'
+import app from '@adonisjs/core/services/app'
+import { defineConfig } from '@7nohe/adonis-bullet'
+
+export default defineConfig({
+  /**
+   * Enable or disable Bullet
+   */
+  enabled: !app.inProduction,
+
+  /**
+   * The threshold level for detecting N+1 queries.
+   * If a relation query is executed more than this number of times, the detector will notify you.
+   **/
+  threshold: env.get('BULLET_THRESHOLD', 1),
+})
