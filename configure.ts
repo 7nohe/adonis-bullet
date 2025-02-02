@@ -10,12 +10,12 @@ export async function configure(command: ConfigureCommand) {
 
   await codemods.updateRcFile((transformer) => {
     transformer.addPreloadFile('#start/bullet')
-    transformer.addProvider('@7nohe/adonis-bullet/providers/bullet_provider')
+    transformer.addProvider('@7nohe/adonis-bullet/provider')
   })
 
   await codemods.registerMiddleware('router', [
     {
-      path: '@7nohe/adonis-bullet/bullet_middleware',
+      path: '@7nohe/adonis-bullet/middleware',
     },
   ])
 
