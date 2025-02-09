@@ -34,7 +34,7 @@ export async function configure(command: ConfigureCommand) {
   const project = await codemods.getTsMorphProject()
   if (!project) {
     command.logger.warning(
-      'Could not find project to add debug property to database config file. Please add it manually.'
+      'Could not find project to add `debug` property to config/database.ts. Please add it manually.'
     )
     return
   }
@@ -48,7 +48,7 @@ export async function configure(command: ConfigureCommand) {
 
     if (!(argument && argument.isKind(SyntaxKind.ObjectLiteralExpression))) {
       command.logger.warning(
-        'Could not find object literal expression to add debug property to database config file. Please add it manually.'
+        'Could not find object literal expression to add `debug` property to config/database.ts. Please add it manually.'
       )
       return
     }
@@ -59,7 +59,7 @@ export async function configure(command: ConfigureCommand) {
 
     if (!connectionsProperty?.isKind(SyntaxKind.PropertyAssignment)) {
       command.logger.warning(
-        'Could not find connections property to add debug property to database config file. Please add it manually.'
+        'Could not find connections property to add `debug` property to config/database.ts. Please add it manually.'
       )
       return
     }
@@ -69,14 +69,14 @@ export async function configure(command: ConfigureCommand) {
 
     if (!connectionsObject) {
       command.logger.warning(
-        'Could not find connections object to add debug property to database config file. Please add it manually.'
+        'Could not find connections object to add `debug` property to config/database.ts. Please add it manually.'
       )
       return
     }
     const property = connectionsObject.getFirstChildByKind(SyntaxKind.PropertyAssignment)
     if (!property?.isKind(SyntaxKind.PropertyAssignment)) {
       command.logger.warning(
-        'Could not find property to add debug property to database config file. Please add it manually.'
+        'Could not find property to add `debug` property to config/database.ts. Please add it manually.'
       )
       return
     }
@@ -85,10 +85,18 @@ export async function configure(command: ConfigureCommand) {
 
     if (!object) {
       command.logger.warning(
-        'Could not find connection object to add debug property to database config file. Please add it manually.'
+        'Could not find connection object to add `debug` property to config/database.ts. Please add it manually.'
       )
       return
     }
+
+    if (object.getProperty('debug')) {
+      command.logger.warning(
+        'The `debug` property already exists in config/database.ts. Skipping adding it. Make sure to set it to true to enable Bullet.'
+      )
+      return
+    }
+
     object.addPropertyAssignment({
       name: 'debug',
       initializer: (writer) => {
@@ -98,15 +106,14 @@ export async function configure(command: ConfigureCommand) {
     isDebugPropertyAdded = true
 
     if (!isDebugPropertyAdded) {
-      command.logger.warning(
-        'Failed to add debug property to database config file. Please add it manually.'
-      )
+      command.logger.warning('Failed to update config/database.ts. Please add it manually.')
     }
 
     await dbConfigFile.save()
+    command.logger.success('update config/database.ts')
   } catch (error) {
     command.logger.warning(
-      'Could not add debug property to database config file. Please add it manually.'
+      'Could not add `debug` property to config/database.ts. Please add it manually.'
     )
   }
 }
