@@ -36,49 +36,48 @@ export async function configure(command: ConfigureCommand) {
     console.warn('Could not add debug property to database config file. Please add it manually.')
     return
   }
-  const dbConfigFile = await project.getSourceFileOrThrow(command.app.startPath('database.ts'))
 
-  const callExpression = dbConfigFile.getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression)
-  const argument = callExpression.getArguments()[0]
+  try {
+    let isDebugPropertyAdded = false
+    const dbConfigFile = await project.getSourceFileOrThrow(command.app.configPath('database.ts'))
 
-  let isDebugPropertyAdded = false
+    const callExpression = dbConfigFile.getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression)
+    const argument = callExpression.getArguments()[0]
 
-  if (argument && argument.isKind(SyntaxKind.ObjectLiteralExpression)) {
-    const objectLiteral = argument as ObjectLiteralExpression
+    if (argument && argument.isKind(SyntaxKind.ObjectLiteralExpression)) {
+      const objectLiteral = argument as ObjectLiteralExpression
 
-    const connectionsProperty = objectLiteral.getProperty('connections')
+      const connectionsProperty = objectLiteral.getProperty('connections')
 
-    if (connectionsProperty?.isKind(SyntaxKind.PropertyAssignment)) {
-      const connectionsObject = connectionsProperty.getInitializerIfKind(
-        SyntaxKind.ObjectLiteralExpression
-      )
+      if (connectionsProperty?.isKind(SyntaxKind.PropertyAssignment)) {
+        const connectionsObject = connectionsProperty.getInitializerIfKind(
+          SyntaxKind.ObjectLiteralExpression
+        )
 
-      if (connectionsObject) {
-        const property = connectionsObject.getFirstChildByKind(SyntaxKind.PropertyAssignment)
-        if (property?.isKind(SyntaxKind.PropertyAssignment)) {
-          const object = property.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression)
+        if (connectionsObject) {
+          const property = connectionsObject.getFirstChildByKind(SyntaxKind.PropertyAssignment)
+          if (property?.isKind(SyntaxKind.PropertyAssignment)) {
+            const object = property.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression)
 
-          if (object) {
-            object.addPropertyAssignment({
-              name: 'debug',
-              initializer: (writer) => {
-                writer.write('!app.inProduction')
-              },
-            })
-            isDebugPropertyAdded = true
+            if (object) {
+              object.addPropertyAssignment({
+                name: 'debug',
+                initializer: (writer) => {
+                  writer.write('!app.inProduction')
+                },
+              })
+              isDebugPropertyAdded = true
+            }
           }
         }
       }
     }
-  }
+    if (!isDebugPropertyAdded) {
+      console.warn('Could not add debug property to database config file. Please add it manually.')
+    }
 
-  try {
     await dbConfigFile.emit()
   } catch (error) {
-    isDebugPropertyAdded = false
-  }
-
-  if (!isDebugPropertyAdded) {
     console.warn('Could not add debug property to database config file. Please add it manually.')
   }
 }
