@@ -63,3 +63,8 @@ emitter.on('bullet:detected', function (query) {
   logger.warn('N + 1 query detected: %j', query)
 })
 ```
+
+## Inspiration
+
+- [Bullet](https://github.com/flyerhzm/bullet)
+- [Laravel Query Detector](https://github.com/beyondcode/laravel-query-detector)

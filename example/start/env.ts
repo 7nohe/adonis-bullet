@@ -24,4 +24,11 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   SESSION_DRIVER: Env.schema.enum(['cookie', 'memory'] as const),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for @7nohe/adonis-bullet
+  |----------------------------------------------------------
+  */
+  BULLET_THRESHOLD: Env.schema.number.optional(),
 })
