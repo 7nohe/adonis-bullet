@@ -99,9 +99,7 @@ export async function configure(command: ConfigureCommand) {
 
     object.addPropertyAssignment({
       name: 'debug',
-      initializer: (writer) => {
-        writer.write('!app.inProduction')
-      },
+      initializer: 'true',
     })
     isDebugPropertyAdded = true
 
