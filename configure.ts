@@ -33,7 +33,9 @@ export async function configure(command: ConfigureCommand) {
 
   const project = await codemods.getTsMorphProject()
   if (!project) {
-    console.warn('Could not add debug property to database config file. Please add it manually.')
+    command.logger.warning(
+      'Could not find project to add debug property to database config file. Please add it manually.'
+    )
     return
   }
 
@@ -44,40 +46,67 @@ export async function configure(command: ConfigureCommand) {
     const callExpression = dbConfigFile.getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression)
     const argument = callExpression.getArguments()[0]
 
-    if (argument && argument.isKind(SyntaxKind.ObjectLiteralExpression)) {
-      const objectLiteral = argument as ObjectLiteralExpression
-
-      const connectionsProperty = objectLiteral.getProperty('connections')
-
-      if (connectionsProperty?.isKind(SyntaxKind.PropertyAssignment)) {
-        const connectionsObject = connectionsProperty.getInitializerIfKind(
-          SyntaxKind.ObjectLiteralExpression
-        )
-
-        if (connectionsObject) {
-          const property = connectionsObject.getFirstChildByKind(SyntaxKind.PropertyAssignment)
-          if (property?.isKind(SyntaxKind.PropertyAssignment)) {
-            const object = property.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression)
-
-            if (object) {
-              object.addPropertyAssignment({
-                name: 'debug',
-                initializer: (writer) => {
-                  writer.write('!app.inProduction')
-                },
-              })
-              isDebugPropertyAdded = true
-            }
-          }
-        }
-      }
+    if (!(argument && argument.isKind(SyntaxKind.ObjectLiteralExpression))) {
+      command.logger.warning(
+        'Could not find object literal expression to add debug property to database config file. Please add it manually.'
+      )
+      return
     }
+
+    const objectLiteral = argument as ObjectLiteralExpression
+
+    const connectionsProperty = objectLiteral.getProperty('connections')
+
+    if (!connectionsProperty?.isKind(SyntaxKind.PropertyAssignment)) {
+      command.logger.warning(
+        'Could not find connections property to add debug property to database config file. Please add it manually.'
+      )
+      return
+    }
+    const connectionsObject = connectionsProperty.getInitializerIfKind(
+      SyntaxKind.ObjectLiteralExpression
+    )
+
+    if (!connectionsObject) {
+      command.logger.warning(
+        'Could not find connections object to add debug property to database config file. Please add it manually.'
+      )
+      return
+    }
+    const property = connectionsObject.getFirstChildByKind(SyntaxKind.PropertyAssignment)
+    if (!property?.isKind(SyntaxKind.PropertyAssignment)) {
+      command.logger.warning(
+        'Could not find property to add debug property to database config file. Please add it manually.'
+      )
+      return
+    }
+
+    const object = property.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression)
+
+    if (!object) {
+      command.logger.warning(
+        'Could not find connection object to add debug property to database config file. Please add it manually.'
+      )
+      return
+    }
+    object.addPropertyAssignment({
+      name: 'debug',
+      initializer: (writer) => {
+        writer.write('!app.inProduction')
+      },
+    })
+    isDebugPropertyAdded = true
+
     if (!isDebugPropertyAdded) {
-      console.warn('Could not add debug property to database config file. Please add it manually.')
+      command.logger.warning(
+        'Failed to add debug property to database config file. Please add it manually.'
+      )
     }
 
     await dbConfigFile.emit()
   } catch (error) {
-    console.warn('Could not add debug property to database config file. Please add it manually.')
+    command.logger.warning(
+      'Could not add debug property to database config file. Please add it manually.'
+    )
   }
 }
