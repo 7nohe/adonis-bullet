@@ -103,7 +103,7 @@ export async function configure(command: ConfigureCommand) {
       )
     }
 
-    await dbConfigFile.emit()
+    await dbConfigFile.save()
   } catch (error) {
     command.logger.warning(
       'Could not add debug property to database config file. Please add it manually.'
